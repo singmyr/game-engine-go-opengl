@@ -100,3 +100,19 @@ func (s *Shader) Use() {
 		gl.UseProgram(s.program)
 	})
 }
+
+// SetUniform2f sets a vec2 of floats in the shader.
+func (s *Shader) SetUniform2f(name string, v1 float32, v2 float32) {
+	mainthread.Call(func() {
+		// If gl.GetUniformLocation returns -1, it failed to locate it.
+		gl.Uniform2f(gl.GetUniformLocation(s.program, gl.Str(name+"\x00")), v1, v2)
+	})
+}
+
+// SetUniform4f sets a vec4 of floats in the shader.
+func (s *Shader) SetUniform4f(name string, v1 float32, v2 float32, v3 float32, v4 float32) {
+	mainthread.Call(func() {
+		// If gl.GetUniformLocation returns -1, it failed to locate it.
+		gl.Uniform4f(gl.GetUniformLocation(s.program, gl.Str(name+"\x00")), v1, v2, v3, v4)
+	})
+}
