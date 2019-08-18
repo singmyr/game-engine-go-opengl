@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"math"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 
@@ -26,10 +25,10 @@ func run() {
 	})
 
 	vertices := []float32{
-		0.5, 0.5, 0.0, // top right
-		0.5, -0.5, 0.0, // bottom right
-		-0.5, -0.5, 0.0, // bottom left
-		-0.5, 0.5, 0.0, // top left
+		0.5, 0.5, 0.0, 1.0, 1.0, 1.0, // top right
+		0.5, -0.5, 0.0, 0.0, 1.0, 0.0, // bottom right
+		-0.5, -0.5, 0.0, 0.0, 0.0, 1.0, // bottom left
+		-0.5, 0.5, 0.0, 1.0, 0.0, 0.0, // top left
 	}
 
 	indices := []uint32{
@@ -76,10 +75,14 @@ func run() {
 		// Vertex shader.
 		vShader := `#version 330 core
 		layout (location = 0) in vec3 aPos;
+		layout (location = 1) in vec3 aColor;
+
+		out vec3 color;
 
 		void main()
 		{
-			gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+			gl_Position = vec4(aPos, 1.0);
+			color = aColor;
 		}`
 
 		vSrc, vFree := gl.Strs(vShader)
@@ -119,11 +122,11 @@ func run() {
 		fShader := `#version 330 core
 		out vec4 FragColor;
 
-		uniform vec4 ourColor;
+		in vec3 color;
 		
 		void main()
 		{
-			FragColor = ourColor;
+			FragColor = vec4(color, 1.0f);
 		}`
 
 		fSrc, fFree := gl.Strs(fShader)
@@ -173,8 +176,10 @@ func run() {
 			log.Printf("error linking program: %s", string(infoLog))
 		}
 
-		gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
+		gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 2*3*4, gl.PtrOffset(0))
 		gl.EnableVertexAttribArray(0)
+		gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 2*3*4, gl.PtrOffset(12))
+		gl.EnableVertexAttribArray(1)
 
 		/*
 			// 0. copy our vertices array in a buffer for OpenGL to use
@@ -200,16 +205,16 @@ func run() {
 		// This isn't being run right now because not sure where it fits in.
 		// window.Update()
 		mainthread.Call(func() {
-			timeValue := glfw.GetTime()
-			redValue := float32((math.Cos(timeValue) / 2.0) + 0.5)
-			greenValue := float32((math.Sin(timeValue) / 2.0) + 0.5)
+			// timeValue := glfw.GetTime()
+			// redValue := float32((math.Cos(timeValue) / 2.0) + 0.5)
+			// greenValue := float32((math.Sin(timeValue) / 2.0) + 0.5)
 			// Wireframe mode.
-			// gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
+			gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 			gl.ClearColor(0.0, 0.0, 0.0, 1.0)
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 			gl.UseProgram(shaderProgram)
-			gl.Uniform4f(ourColor, redValue, greenValue, 1.0, 1.0)
+			// gl.Uniform4f(ourColor, redValue, greenValue, 1.0, 1.0)
 			gl.BindVertexArray(vao)
 			gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
 			gl.BindVertexArray(0)
