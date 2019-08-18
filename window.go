@@ -27,6 +27,11 @@ type WindowConfig struct {
 
 var currentWindow *Window
 
+func frameBufferSizeCallback(w *glfw.Window, width int, height int) {
+	log.Println("Window has been resized to:", width, height)
+	// @todo: is gl.Viewport needed here?
+}
+
 // CreateWindow creates a new window and returns the Window object for it.
 func CreateWindow(width int, height int, title string, cfg *WindowConfig) (*Window, error) {
 	if currentWindow != nil {
@@ -35,7 +40,7 @@ func CreateWindow(width int, height int, title string, cfg *WindowConfig) (*Wind
 	// @todo: Make use of the cfg for these window hints.
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)
 	glfw.WindowHint(glfw.ContextVersionMinor, 3)
-	glfw.WindowHint(glfw.Resizable, glfw.False)
+	glfw.WindowHint(glfw.Resizable, glfw.True)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
@@ -55,7 +60,9 @@ func CreateWindow(width int, height int, title string, cfg *WindowConfig) (*Wind
 		version := gl.GoStr(gl.GetString(gl.VERSION))
 		log.Println("OpenGL version", version)
 
-		gl.ClearColor(0.3, 0.3, 0.3, 1.0)
+		gl.ClearColor(1.0, 0.3, 0.3, 1.0)
+
+		w.SetFramebufferSizeCallback(frameBufferSizeCallback)
 	})
 
 	currentWindow = &Window{window: w}
@@ -85,6 +92,7 @@ var calls int
 // Update needs to be called prior to Render inside a loop to cause events to be polled and objects updated.
 func (w *Window) Update() {
 	mainthread.Call(func() {
+		log.Println("Update")
 		time := glfw.GetTime()
 		delta := time - w.previousTime
 		w.previousTime = time
@@ -96,18 +104,17 @@ func (w *Window) Update() {
 		}
 
 		// fmt.Printf("Delta: %f\n", delta)
-		glfw.PollEvents()
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	})
 }
 
 // Render renders stuff on screen.
 func (w *Window) Render() {
+	w.window.SwapBuffers()
 	mainthread.Call(func() {
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
 		// @todo: Do rendering.
 
-		currentWindow.window.SwapBuffers()
+		glfw.PollEvents()
 	})
 }
 
