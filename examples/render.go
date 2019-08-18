@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 
@@ -75,7 +76,7 @@ func run() {
 		// Vertex shader.
 		vShader := `#version 330 core
 		layout (location = 0) in vec3 aPos;
-		
+
 		void main()
 		{
 			gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
@@ -117,10 +118,12 @@ func run() {
 		// Fragment shader.
 		fShader := `#version 330 core
 		out vec4 FragColor;
+
+		uniform vec4 ourColor;
 		
 		void main()
 		{
-			FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+			FragColor = ourColor;
 		}`
 
 		fSrc, fFree := gl.Strs(fShader)
@@ -187,14 +190,26 @@ func run() {
 		*/
 	})
 
+	var ourColor int32
+	mainthread.Call(func() {
+		// If gl.GetUniformLocation returns -1, it failed to locate it.
+		ourColor = gl.GetUniformLocation(shaderProgram, gl.Str("ourColor\x00"))
+	})
+
 	for window.IsOpen() {
 		// This isn't being run right now because not sure where it fits in.
 		// window.Update()
 		mainthread.Call(func() {
+			timeValue := glfw.GetTime()
+			redValue := float32((math.Cos(timeValue) / 2.0) + 0.5)
+			greenValue := float32((math.Sin(timeValue) / 2.0) + 0.5)
+			// Wireframe mode.
+			// gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 			gl.ClearColor(0.0, 0.0, 0.0, 1.0)
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 			gl.UseProgram(shaderProgram)
+			gl.Uniform4f(ourColor, redValue, greenValue, 1.0, 1.0)
 			gl.BindVertexArray(vao)
 			gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
 			gl.BindVertexArray(0)
