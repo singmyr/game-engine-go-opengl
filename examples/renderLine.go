@@ -153,7 +153,7 @@ func run() {
 
 		// Can't call this inside of mainthread, that will hang everything.
 		textureShader.Use()
-		textureShader.SetUniformf2("offset", offsetX, offsetY)
+		textureShader.SetUniform2f("offset", offsetX, offsetY)
 		mainthread.Call(func() {
 			// timeValue := glfw.GetTime()
 			// redValue := float32((math.Cos(timeValue) / 2.0) + 0.5)
